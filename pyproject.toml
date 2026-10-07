@@ -1,0 +1,40 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tensordecomp"
+version = "0.1.0"
+description = "High-dimensional tensor decompositions and PuzzleTensor optimization library"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Tensor Decomposer Contributors" }
+]
+keywords = [
+    "tensor",
+    "tensor-decomposition",
+    "cp-decomposition",
+    "tucker-decomposition",
+    "hosvd",
+    "tensor-train",
+    "puzzle-tensor",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["tensordecomp"]
