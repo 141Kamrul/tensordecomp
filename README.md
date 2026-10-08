@@ -31,15 +31,22 @@
 
 ### Local Editable Install (Development Mode)
 ```bash
-pip install -e ./tensordecomp
+pip install -e .
 # or with uv
-uv pip install -e ./tensordecomp
+uv pip install -e .
 ```
 
-To use the comparison plots, install the optional plotting dependency:
+To use the comparison plots in an editable installation, install the optional
+plotting dependency:
 
 ```bash
-pip install -e "./tensordecomp[plotting]"
+pip install -e ".[plotting]"
+```
+
+For a regular installation from PyPI:
+
+```bash
+pip install "tensordecomp[plotting]"
 ```
 
 ---
@@ -58,7 +65,7 @@ cp_res = td.cp(tensor, rank=3)
 print("CP Factors:", [f.shape for f in cp_res["factors"]])
 
 # 3. Run PuzzleTensor Shifting
-shifted_tensor, shifts = td.puzzle_tensor(tensor, max_shift=2)
+shifted_tensor, shifts = td.puzzle_tensor(tensor, max_shift=2, return_shifts=False)
 
 # 4. Run Puzzle-Augmented Tucker Decomposition
 tucker_res = td.tucker_puzzle(tensor, ranks=[3, 3, 3])
@@ -74,20 +81,40 @@ comparison = td.compare_methods(tensor, ["cp", "tucker", "hosvd", "tensor_train"
 for row in comparison:
     print(f"{row['algorithm']}: {row['execution_time_ms']:.2f}ms, error={row['relative_error']:.4e}")
 
-# 7. Plot execution time and relative error for all methods
+# 7. Compare methods numerically
 figure = td.compare_methods_graph(
     tensor,
-    ["cp", "tucker", "hosvd", "tensor_train"],
+    [
+        "cp", "cp_puzzle", "tucker", "tucker_puzzle",
+        "hosvd", "hosvd_puzzle", "tensor_train", "tensor_train_puzzle",
+    ],
     show=False,
 )
-figure.savefig("method-comparison.png")
+# In a notebook, evaluate `figure` to render it.
 
-# Separate figures for all eight tensor methods, including PuzzleTensor methods.
+# 8. Create separate benchmark figures for all eight default methods.
+# Each function returns a matplotlib.figure.Figure. Use show=False in scripts
+# or notebooks where you want to display or customize the figure yourself.
 td.benchmark_methods_graph(tensor, show=True)
 td.error_methods_graph(tensor, show=True)
 td.time_methods_graph(tensor, show=True)
 td.compression_methods_graph(tensor, show=True)
 ```
+
+The graph functions compare these methods by default:
+
+- `cp` and `cp_puzzle`
+- `tucker` and `tucker_puzzle`
+- `hosvd` and `hosvd_puzzle`
+- `tensor_train` and `tensor_train_puzzle`
+
+Use `show=False` when running in a headless environment, then display the
+returned figure in a notebook or save it with Matplotlib. The plotting
+dependency is optional; numerical decomposition and benchmarking functions
+only require NumPy.
+
+For an interactive example, see
+[`compare_methods_graph_demo.ipynb`](./compare_methods_graph_demo.ipynb).
 
 ---
 
