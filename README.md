@@ -36,6 +36,12 @@ pip install -e ./tensordecomp
 uv pip install -e ./tensordecomp
 ```
 
+To use the comparison plots, install the optional plotting dependency:
+
+```bash
+pip install -e "./tensordecomp[plotting]"
+```
+
 ---
 
 ## Quickstart
@@ -67,6 +73,20 @@ print(f"Compression: {analysis['compression_ratio']:.2f}x")
 comparison = td.compare_methods(tensor, ["cp", "tucker", "hosvd", "tensor_train"])
 for row in comparison:
     print(f"{row['algorithm']}: {row['execution_time_ms']:.2f}ms, error={row['relative_error']:.4e}")
+
+# 7. Plot execution time and relative error for all methods
+figure = td.compare_methods_graph(
+    tensor,
+    ["cp", "tucker", "hosvd", "tensor_train"],
+    show=False,
+)
+figure.savefig("method-comparison.png")
+
+# Separate figures for all eight tensor methods, including PuzzleTensor methods.
+td.benchmark_methods_graph(tensor, show=True)
+td.error_methods_graph(tensor, show=True)
+td.time_methods_graph(tensor, show=True)
+td.compression_methods_graph(tensor, show=True)
 ```
 
 ---

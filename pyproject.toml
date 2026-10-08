@@ -45,6 +45,9 @@ Issues = "https://github.com/141Kamrul/tensordecomp/issues"
 dev = [
     "pytest>=8.0",
 ]
+plotting = [
+    "matplotlib>=3.8",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["tensordecomp"]

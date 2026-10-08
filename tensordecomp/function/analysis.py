@@ -13,6 +13,39 @@ from .tensor_utils import (
     reconstruct_tucker,
 )
 
+DEFAULT_BENCHMARK_METHODS: tuple[str, ...] = (
+    "cp",
+    "cp_puzzle",
+    "tucker",
+    "tucker_puzzle",
+    "hosvd",
+    "hosvd_puzzle",
+    "tensor_train",
+    "tensor_train_puzzle",
+)
+
+
+def _load_pyplot():
+    try:
+        import matplotlib.pyplot as plt
+    except ImportError as exc:
+        raise ImportError(
+            "Graph functions require matplotlib. Install it with "
+            "`pip install 'tensordecomp[plotting]'`."
+        ) from exc
+    return plt
+
+
+def _method_labels(comparison: list[dict[str, Any]]) -> list[str]:
+    return [row["algorithm"].replace("_", " ").title() for row in comparison]
+
+
+def _configure_method_axis(axis: Any, labels: list[str], ylabel: str) -> None:
+    positions = np.arange(len(labels))
+    axis.set_xticks(positions, labels, rotation=35, ha="right")
+    axis.set_ylabel(ylabel)
+    axis.grid(axis="y", alpha=0.3)
+
 
 def analyze_decomposition(array: np.ndarray, algorithm: str, result: dict[str, Any]) -> dict[str, Any]:
     tensor = np.asarray(array, dtype=float)
@@ -92,6 +125,176 @@ def compare_methods(array: np.ndarray, algorithms: Iterable[str]) -> list[dict[s
         )
 
     return comparison
+
+
+def compare_methods_graph(
+    array: np.ndarray,
+    algorithms: Iterable[str] = DEFAULT_BENCHMARK_METHODS,
+    *,
+    show: bool = True,
+):
+    """Plot execution time and relative error for each decomposition method.
+
+    Parameters
+    ----------
+    array:
+        Tensor to decompose and benchmark.
+    algorithms:
+        Names of the algorithms to compare.
+    show:
+        Whether to display the figure immediately.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated figure. The figure can be further customized or saved
+        by callers.
+
+    Notes
+    -----
+    Matplotlib is imported only when this function is called so the core
+    numerical API does not require the optional plotting dependency.
+    """
+    plt = _load_pyplot()
+
+    comparison = compare_methods(array, algorithms)
+    method_names = [row["algorithm"] for row in comparison]
+    execution_times = [row["execution_time_ms"] for row in comparison]
+    relative_errors = [row["relative_error"] for row in comparison]
+
+    figure, axes = plt.subplots(1, 2, figsize=(12, 5))
+    time_axis, error_axis = axes
+    positions = np.arange(len(method_names))
+
+    time_axis.bar(positions, execution_times, color="steelblue")
+    time_axis.set_title("Execution time")
+    time_axis.set_ylabel("Time (ms)")
+    time_axis.set_xticks(positions, method_names, rotation=30, ha="right")
+    time_axis.grid(axis="y", alpha=0.3)
+
+    error_axis.bar(positions, relative_errors, color="darkorange")
+    error_axis.set_title("Relative reconstruction error")
+    error_axis.set_ylabel("Relative error")
+    error_axis.set_xticks(positions, method_names, rotation=30, ha="right")
+    error_axis.grid(axis="y", alpha=0.3)
+
+    figure.suptitle("Tensor decomposition method comparison")
+    figure.tight_layout()
+
+    if show:
+        plt.show()
+
+    return figure
+
+
+def benchmark_methods_graph(
+    array: np.ndarray,
+    algorithms: Iterable[str] = DEFAULT_BENCHMARK_METHODS,
+    *,
+    show: bool = True,
+):
+    """Plot a three-panel benchmark summary for the decomposition methods."""
+    plt = _load_pyplot()
+    comparison = compare_methods(array, algorithms)
+    labels = _method_labels(comparison)
+    positions = np.arange(len(labels))
+
+    figure, axes = plt.subplots(1, 3, figsize=(18, 5))
+    metrics = (
+        ("execution_time_ms", "Execution time", "Time (ms)", "steelblue"),
+        ("relative_error", "Relative error", "Relative error", "darkorange"),
+        ("compression_ratio", "Compression ratio", "Ratio", "seagreen"),
+    )
+    for axis, (key, title, ylabel, color) in zip(axes, metrics):
+        axis.bar(positions, [row[key] for row in comparison], color=color)
+        axis.set_title(title)
+        _configure_method_axis(axis, labels, ylabel)
+
+    figure.suptitle("Tensor decomposition benchmark")
+    figure.tight_layout()
+    if show:
+        plt.show()
+    return figure
+
+
+def error_methods_graph(
+    array: np.ndarray,
+    algorithms: Iterable[str] = DEFAULT_BENCHMARK_METHODS,
+    *,
+    show: bool = True,
+):
+    """Plot reconstruction error metrics for the decomposition methods."""
+    plt = _load_pyplot()
+    comparison = compare_methods(array, algorithms)
+    labels = _method_labels(comparison)
+    positions = np.arange(len(labels))
+    width = 0.2
+
+    figure, axis = plt.subplots(figsize=(12, 6))
+    error_metrics = (
+        ("relative_error", "Relative"),
+        ("absolute_error", "Absolute"),
+        ("mean_absolute_error", "MAE"),
+        ("root_mean_squared_error", "RMSE"),
+    )
+    for index, (key, label) in enumerate(error_metrics):
+        axis.bar(
+            positions + (index - 1.5) * width,
+            [row[key] for row in comparison],
+            width,
+            label=label,
+        )
+    axis.set_title("Reconstruction error by method")
+    _configure_method_axis(axis, labels, "Error")
+    axis.legend()
+    figure.tight_layout()
+    if show:
+        plt.show()
+    return figure
+
+
+def time_methods_graph(
+    array: np.ndarray,
+    algorithms: Iterable[str] = DEFAULT_BENCHMARK_METHODS,
+    *,
+    show: bool = True,
+):
+    """Plot execution time for the decomposition methods."""
+    plt = _load_pyplot()
+    comparison = compare_methods(array, algorithms)
+    labels = _method_labels(comparison)
+    positions = np.arange(len(labels))
+
+    figure, axis = plt.subplots(figsize=(12, 6))
+    axis.bar(positions, [row["execution_time_ms"] for row in comparison], color="steelblue")
+    axis.set_title("Execution time by method")
+    _configure_method_axis(axis, labels, "Time (ms)")
+    figure.tight_layout()
+    if show:
+        plt.show()
+    return figure
+
+
+def compression_methods_graph(
+    array: np.ndarray,
+    algorithms: Iterable[str] = DEFAULT_BENCHMARK_METHODS,
+    *,
+    show: bool = True,
+):
+    """Plot compression ratios for the decomposition methods."""
+    plt = _load_pyplot()
+    comparison = compare_methods(array, algorithms)
+    labels = _method_labels(comparison)
+    positions = np.arange(len(labels))
+
+    figure, axis = plt.subplots(figsize=(12, 6))
+    axis.bar(positions, [row["compression_ratio"] for row in comparison], color="seagreen")
+    axis.set_title("Compression ratio by method")
+    _configure_method_axis(axis, labels, "Compression ratio")
+    figure.tight_layout()
+    if show:
+        plt.show()
+    return figure
 
 
 

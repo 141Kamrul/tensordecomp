@@ -18,6 +18,11 @@ def test_library_exports():
         "invert_puzzle_tensor",
         "analyze_decomposition",
         "compare_methods",
+        "compare_methods_graph",
+        "benchmark_methods_graph",
+        "compression_methods_graph",
+        "error_methods_graph",
+        "time_methods_graph",
         "benchmark_algorithm",
         "reconstruct_tensor",
         "parse_tensor_input",
@@ -108,6 +113,30 @@ def test_compare_methods():
         assert "execution_time_ms" in row
 
 
+def test_compare_methods_graph():
+    pytest.importorskip("matplotlib")
+    tensor = np.arange(24, dtype=float).reshape(2, 3, 4)
+    figure = td.compare_methods_graph(tensor, ["hosvd"], show=False)
+    assert len(figure.axes) == 2
+    assert figure.axes[0].get_title() == "Execution time"
+    assert figure.axes[1].get_title() == "Relative reconstruction error"
+    figure.clf()
+
+
+def test_separate_method_graphs():
+    pytest.importorskip("matplotlib")
+    tensor = np.arange(24, dtype=float).reshape(2, 3, 4)
+    for graph_function, expected_axes in (
+        (td.benchmark_methods_graph, 3),
+        (td.compression_methods_graph, 1),
+        (td.error_methods_graph, 1),
+        (td.time_methods_graph, 1),
+    ):
+        figure = graph_function(tensor, ["hosvd"], show=False)
+        assert len(figure.axes) == expected_axes
+        figure.clf()
+
+
 def test_mode_and_multilinear_ranks():
     tensor = np.arange(24, dtype=float).reshape(2, 3, 4)
 
@@ -165,4 +194,3 @@ def test_complexity_formula_product_of_n():
     tucker_c = td.get_complexity_formula(shape, "tucker")
     assert "∏ N_i" in tucker_c
     assert "N₁N₂N₃" not in tucker_c
-

@@ -20,8 +20,13 @@ from .algorithms import (
 )
 from .function.analysis import (
     analyze_decomposition,
+    benchmark_methods_graph,
+    compression_methods_graph,
     compare_methods,
+    compare_methods_graph,
+    error_methods_graph,
     reconstruct_tensor,
+    time_methods_graph,
 )
 from .function.benchmark import (
     benchmark_algorithm,
@@ -56,11 +61,15 @@ __all__ = [
     "analyze_decomposition",
     "as_float_tensor",
     "benchmark_algorithm",
+    "benchmark_methods_graph",
+    "compression_methods_graph",
     "compare_methods",
+    "compare_methods_graph",
     "count_parameters",
     "cp",
     "cp_puzzle",
     "eigendecomposition",
+    "error_methods_graph",
     "estimate_flops",
     "get_complexity_formula",
     "hosvd",
@@ -86,6 +95,7 @@ __all__ = [
     "tensor_nuclear_norm_loss",
     "tensor_train",
     "tensor_train_puzzle",
+    "time_methods_graph",
     "tucker",
     "tucker_puzzle",
 ]
